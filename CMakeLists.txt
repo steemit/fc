@@ -25,6 +25,12 @@ SET( DEFAULT_EXECUTABLE_INSTALL_DIR bin/ )
 SET( CMAKE_DEBUG_POSTFIX _debug )
 SET( BUILD_SHARED_LIBS NO )
 SET( ECC_IMPL secp256k1 CACHE STRING "secp256k1 or openssl or mixed" )
+SET( FC_USE_FULL_ZLIB FALSE CACHE BOOL "TRUE to try to use full zlib for compression, FALSE to use miniz.c")
+
+if( FC_USE_FULL_ZLIB )
+  find_package( ZLIB REQUIRED )
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFC_USE_FULL_ZLIB")
+endif()
 
 set(platformBitness 32)
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -322,6 +328,7 @@ target_include_directories(fc
     ${CMAKE_CURRENT_SOURCE_DIR}/vendor/udt4/src
     ${CMAKE_CURRENT_SOURCE_DIR}/vendor/websocketpp
     ${CMAKE_CURRENT_SOURCE_DIR}/vendor/secp256k1-zkp
+    ${ZLIB_INCLUDE_DIRS}
   )
 
 #target_link_libraries( fc PUBLIC udt ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES} ${PLATFORM_SPECIFIC_LIBS} ${RPCRT4} ${CMAKE_DL_LIBS} ${rt_library} ${ECC_LIB} )
