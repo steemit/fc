@@ -97,6 +97,7 @@ namespace fc
           {
             elog( "${e}", ("e",e.to_detail_string() ) ); 
           }
+          FC_CAPTURE_AND_LOG( (item) )
         }
       } // request_now
 
