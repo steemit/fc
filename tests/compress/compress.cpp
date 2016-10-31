@@ -38,9 +38,9 @@ BOOST_AUTO_TEST_CASE(smaz_test)
     BOOST_CHECK_EQUAL( decomp, line );
 }
 
+#ifndef FC_USE_FULL_ZLIB
 
 extern "C" {
-
 enum
 {
   TINFL_FLAG_PARSE_ZLIB_HEADER = 1,
@@ -85,5 +85,6 @@ BOOST_AUTO_TEST_CASE(zlib_test)
     std::string decomp = zlib_decompress( compressed );
     BOOST_CHECK_EQUAL( decomp, line );
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -5,12 +5,17 @@
 #include <fc/thread/scoped_lock.hpp>
 #include <fc/thread/thread.hpp>
 #include <fc/variant.hpp>
+#ifdef FC_USE_FULL_ZLIB
+# include <fc/compress/zlib.hpp>
+#endif
 #include <boost/thread/mutex.hpp>
 #include <iomanip>
 #include <queue>
 #include <sstream>
 
 namespace fc {
+
+   static const string compression_extension( ".gz" );
 
    class file_appender::impl : public fc::retainable
    {
@@ -22,12 +27,35 @@ namespace fc {
       private:
          future<void>               _rotation_task;
          time_point_sec             _current_file_start_time;
+         std::unique_ptr<thread>    _compression_thread;
 
          time_point_sec get_file_start_time( const time_point_sec& timestamp, const microseconds& interval )
          {
              int64_t interval_seconds = interval.to_seconds();
              int64_t file_number = timestamp.sec_since_epoch() / interval_seconds;
              return time_point_sec( (uint32_t)(file_number * interval_seconds) );
+         }
+
+         void compress_file( const fc::path& filename )
+         {
+#ifdef FC_USE_FULL_ZLIB
+             FC_ASSERT( cfg.rotate && cfg.rotation_compression );
+             FC_ASSERT( _compression_thread );
+             if( !_compression_thread->is_current() )
+             {
+                 _compression_thread->async( [this, filename]() { compress_file( filename ); }, "compress_file" ).wait();
+                 return;
+             }
+
+             try
+             {
+                 gzip_compress_file( filename, filename.parent_path() / (filename.filename().string() + compression_extension) );
+                 remove_all( filename );
+             }
+             catch( ... )
+             {
+             }
+#endif
          }
 
       public:
@@ -38,8 +66,10 @@ namespace fc {
                  FC_ASSERT( cfg.rotation_interval >= seconds( 1 ) );
                  FC_ASSERT( cfg.rotation_limit >= cfg.rotation_interval );
 
-
-
+#ifdef FC_USE_FULL_ZLIB
+                 if( cfg.rotation_compression )
+                     _compression_thread.reset( new thread( "compression") );
+#endif
 
                  _rotation_task = async( [this]() { rotate_files( true ); }, "rotate_files(1)" );
              }
@@ -107,11 +137,16 @@ namespace fc {
                      fc::time_point_sec current_timestamp = fc::time_point_sec::from_iso_string( current_timestamp_str );
                      if( current_timestamp < start_time )
                      {
-                         if( current_timestamp < limit_time || file_size( current_filename ) <= 0 )
+                         if( current_timestamp < limit_time || file_size( link_filename.parent_path() / itr->filename() ) <= 0 )
                          {
                              remove_all( *itr );
                              continue;
                          }
+                         if( !cfg.rotation_compression )
+                           continue;
+                         if( current_filename.find( compression_extension ) != string::npos )
+                           continue;
+                         compress_file( *itr );
                      }
                  }
                  catch (const fc::canceled_exception&)
@@ -134,7 +169,8 @@ namespace fc {
      format( "${timestamp} ${thread_name} ${context} ${file}:${line} ${method} ${level}]  ${message}" ),
      filename(p),
      flush(true),
-     rotate(false)
+     rotate(false),
+     rotation_compression(false)
    {}
 
    file_appender::file_appender( const variant& args ) :
