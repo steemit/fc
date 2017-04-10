@@ -156,7 +156,7 @@ namespace fc
     *   and other information that is generally only useful for
     *   developers.
     */
-   string exception::to_detail_string( log_level ll  )const
+   string exception::to_detail_string( log_level ll )const
    {
       fc::stringstream ss;
       ss << variant(my->_code).as_string() <<" " << my->_name << ": " <<my->_what<<"\n";
@@ -174,13 +174,14 @@ namespace fc
    /**
     *   Generates a user-friendly error report.
     */
-   string exception::to_string( log_level ll   )const
+   string exception::to_string( log_level ll )const
    {
       fc::stringstream ss;
-      ss << what() << " (" << variant(my->_code).as_string() <<")\n";
+      ss << what() << ":";
       for( auto itr = my->_elog.begin(); itr != my->_elog.end(); ++itr )
       {
-         ss << fc::format_string( itr->get_format(), itr->get_data() ) <<"\n";
+         if( itr->get_format().size() )
+            ss << " " << fc::format_string( itr->get_format(), itr->get_data() );
    //      ss << "    " << itr->get_context().to_string() <<"\n";
       }
       return ss.str();

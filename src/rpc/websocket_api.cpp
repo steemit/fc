@@ -90,6 +90,7 @@ std::string websocket_api_connection::on_message(
    {
       auto var = fc::json::from_string(message);
       const auto& var_obj = var.get_object();
+
       if( var_obj.contains( "method" ) )
       {
          auto call = var.as<fc::rpc::request>();
@@ -115,7 +116,7 @@ std::string websocket_api_connection::on_message(
 
                if( call.id )
                {
-                  auto reply = fc::json::to_string( response( *call.id, result ) );
+                  auto reply = fc::json::to_string( response( *call.id, result, "2.0" ) );
                   if( send_message )
                      _connection.send_message( reply );
                   return reply;
@@ -132,7 +133,7 @@ std::string websocket_api_connection::on_message(
          }
          if( optexcept ) {
 
-               auto reply = fc::json::to_string( response( *call.id,  error_object{ 1, optexcept->to_detail_string(), fc::variant(*optexcept)}  ) );
+               auto reply = fc::json::to_string( response( *call.id,  error_object{ 1, optexcept->to_string(), fc::variant(*optexcept)}, "2.0" ) );
                if( send_message )
                   _connection.send_message( reply );
 
