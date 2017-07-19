@@ -27,12 +27,15 @@ namespace fc {
       safe(){}
       safe( const safe& o ):value(o.value){}
 
-      static safe min()
-      {
+       operator std::string() const {
+           return std::to_string(value);
+       }
+
+       static safe min() {
           return std::numeric_limits<T>::min();
-      }
-      static safe max()
-      {
+       }
+
+      static safe max() {
           return std::numeric_limits<T>::max();
       }
 
