@@ -51,7 +51,7 @@ namespace fc
             console_appender( const config& cfg );
             console_appender();
 
-            ~console_appender();
+            virtual ~console_appender();
             virtual void log( const log_message& m );
             
             void print( const std::string& text_to_print, 
