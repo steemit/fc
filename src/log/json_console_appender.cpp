@@ -11,12 +11,11 @@
 #define COLOR_CONSOLE 1
 #include "console_defines.h"
 #include <fc/io/stdio.hpp>
+#include <fc/io/json.hpp>
 #include <fc/exception/exception.hpp>
 #include <iomanip>
 #include <sstream>
-// 
-#include <fc/io/json.hpp>
-// 
+
 namespace fc {
 json_console_appender::~json_console_appender() {
 
@@ -28,9 +27,9 @@ void json_console_appender::log( const log_message& m ) {
 
     FILE* out = stream::std_error ? stderr : stdout;
 
-    log_map("level", m.get_context().get_context() );
-    log_map("file", m.get_context().get_file() );
-    log_map("line", m.get_context().get_line_number() );
+    log_map( "level", m.get_context().get_log_level() );
+    log_map( "file", m.get_context().get_file() );
+    log_map( "line", m.get_context().get_line_number() );
 
     auto me = m.get_context().get_method();
     // strip all leading scopes...
@@ -43,13 +42,13 @@ void json_console_appender::log( const log_message& m ) {
         }
 
         if( me[p] == ':' ) ++p;
-        log_map( "method", m.get_context().get_method().substr(p,20).c_str() );
+        log_map( "method", m.get_context().get_method().substr(p, 20) );
     }
 
     log_map( "hostname", m.get_context().get_host_name() );
-    log_map("thread_name", m.get_context().get_thread_name().substr(0,9).c_str() );
-    log_map("timestamp", m.get_context().get_timestamp() );
-    log_map("context", m.get_context().get_context() );
+    log_map( "thread_name", m.get_context().get_thread_name().substr(0, 9) );
+    log_map( "timestamp", m.get_context().get_timestamp() );
+    log_map( "context", m.get_context().get_context() );
     log_map( "format", m.get_format() );
     log_map( "data", m.get_data() );
 
