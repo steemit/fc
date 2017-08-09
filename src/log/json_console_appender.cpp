@@ -18,41 +18,22 @@
 #include <fc/io/json.hpp>
 // 
 namespace fc {
+json_console_appender::~json_console_appender() {
 
-class json_console_appender::impl {
-public:
-  config                      cfg;
-  color::type                 lc[log_level::off+1];
-#ifdef WIN32
-  HANDLE                      json_console_handle;
-#endif
-};
-
-json_console_appender::json_console_appender( const variant& args ) 
-:my(new impl)
-{
-   configure( args.as<config>() );
 }
-
-json_console_appender::json_console_appender( const config& cfg )
-:my(new impl)
-{
-   configure( cfg );
-}
-json_console_appender::json_console_appender()
-:my(new impl){}
-
 void json_console_appender::log( const log_message& m ) {
-   
+
+   FILE* out = stream::std_error ? stderr : stdout;
+
    fc::variant v;
    fc::to_variant(m, v);
    // std::string json_log_message = fc::json::to_pretty_string(v);
    std::string json_log_message = fc::json::to_string(v);
 
-   print(json_log_message, my->lc[m.get_context().get_log_level()] );
+   print(json_log_message, this->get_text_color(m) );
 
    fprintf( out, "\n" );
-
-   if( my->cfg.flush ) fflush( out );
+   // if(my->cfg.flush )
+    fflush( out );
 }
 }
