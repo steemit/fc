@@ -65,7 +65,7 @@ namespace fc
             std::unique_ptr<impl> my;
 
             fc::console_appender::color::type get_text_color( const log_message& m ) const;
-            // void flush() const;
+            bool can_flush() const;
    };
 } // namespace fc
 

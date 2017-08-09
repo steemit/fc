@@ -96,14 +96,11 @@ namespace fc {
       //fc::string fmt_str = fc::format_string( cfg.format, mutable_variant_object(m.get_context())( "message", message)  );
       std::stringstream file_line;
       file_line << m.get_context().get_file() << ":" << m.get_context().get_line_number() <<" ";
-      std::cerr << m.get_context().get_file() << std::endl;
-      std::cerr << m.get_context().get_line_number() << std::endl;
       ///////////////
       std::stringstream line;
       line << (m.get_context().get_timestamp().time_since_epoch().count() % (1000ll*1000ll*60ll*60))/1000 <<"ms ";
-      std::cerr << (m.get_context().get_timestamp().time_since_epoch().count() % (1000ll*1000ll*60ll*60))/1000 << "ms " << std::endl;
+
       line << std::setw( 10 ) << std::left << m.get_context().get_thread_name().substr(0,9).c_str() <<" "<<std::setw(30)<< std::left <<file_line.str();
-      std::cerr << std::setw( 10 ) << std::left << m.get_context().get_thread_name().substr(0,9).c_str() <<" "<<std::setw(30)<< std::left <<file_line.str() << std::endl;
 
       auto me = m.get_context().get_method();
       // strip all leading scopes...
@@ -117,14 +114,11 @@ namespace fc {
 
          if( me[p] == ':' ) ++p;
          line << std::setw( 20 ) << std::left << m.get_context().get_method().substr(p,20).c_str() <<" ";
-         std::cerr << std::setw( 20 ) << std::left << m.get_context().get_method().substr(p,20).c_str() <<" ";
       }
       line << "] ";
-      std::cerr << "] " << std::endl;
 
       fc::string message = fc::format_string( m.get_format(), m.get_data() );
       line << message;//.c_str();
-      std::cerr << message << std::endl;
 
       fc::unique_lock<boost::mutex> lock(log_mutex());
 
@@ -162,5 +156,9 @@ namespace fc {
    fc::console_appender::color::type console_appender::get_text_color( const log_message& m ) const {
       return my->lc[m.get_context().get_log_level()];
    }
+   bool console_appender::can_flush() const {
+      return my->cfg.flush;
+   }
 }
 
+   
