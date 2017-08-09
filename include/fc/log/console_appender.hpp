@@ -59,7 +59,8 @@ namespace fc
 
             void configure( const config& cfg );
 
-       private:
+       // private:
+       protected:
             class impl;
             std::unique_ptr<impl> my;
    };
