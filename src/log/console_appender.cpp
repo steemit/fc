@@ -160,5 +160,3 @@ namespace fc {
       return my->cfg.flush;
    }
 }
-
-   

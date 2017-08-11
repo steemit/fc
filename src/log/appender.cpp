@@ -6,6 +6,7 @@
 #include <fc/thread/spin_lock.hpp>
 #include <fc/thread/scoped_lock.hpp>
 #include <fc/log/console_appender.hpp>
+#include <fc/log/json_console_appender.hpp>
 #include <fc/log/file_appender.hpp>
 #include <fc/log/gelf_appender.hpp>
 #include <fc/variant.hpp>

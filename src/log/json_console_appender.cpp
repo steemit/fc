@@ -17,13 +17,13 @@
 #include <sstream>
 
 namespace fc {
-json_console_appender::~json_console_appender() {
-
+    
+json_console_appender::~json_console_appender() {    
 }
 void json_console_appender::log( const log_message& m ) {
-
     fc::variant v;
     mutable_variant_object log_map;
+    static boost::mutex mtx;
 
     FILE* out = stream::std_error ? stderr : stdout;
 
@@ -56,11 +56,14 @@ void json_console_appender::log( const log_message& m ) {
     // std::string json_log_message = fc::json::to_pretty_string(v);
     std::string json_log_message = fc::json::to_string(v);
 
-    fc::unique_lock<boost::mutex> lock(log_mutex());
+    fc::unique_lock<boost::mutex> lock(mtx);
 
     print(json_log_message, this->get_text_color(m) );
 
     fprintf( out, "\n" );
-    if ( can_flush() ) fflush( out );
+    if ( can_flush() ) {
+        fflush( out );
+    }
+        
 }
 }

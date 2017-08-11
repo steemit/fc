@@ -198,6 +198,7 @@ set( fc_sources
      src/log/logger.cpp
      src/log/appender.cpp
      src/log/console_appender.cpp
+     src/log/json_console_appender.cpp
      src/log/file_appender.cpp
      src/log/gelf_appender.cpp
      src/log/logger_config.cpp
