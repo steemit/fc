@@ -46,7 +46,7 @@ public:
            bool                               	flush;
         };
     
-    virtual ~json_console_appender();
+    virtual ~json_console_appender() = default;
 };
 }
 
