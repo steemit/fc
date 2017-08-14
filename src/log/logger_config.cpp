@@ -5,10 +5,12 @@
 #include <unordered_map>
 #include <string>
 #include <fc/log/console_appender.hpp>
+#include <fc/log/json_console_appender.hpp>
 #include <fc/log/file_appender.hpp>
 #include <fc/reflect/variant.hpp>
 #include <fc/exception/exception.hpp>
 #include <fc/io/stdio.hpp>
+#include <fc/io/json.hpp>
 
 namespace fc {
    extern std::unordered_map<std::string,logger>& get_logger_map();
@@ -23,13 +25,14 @@ namespace fc {
    {
       try {
       static bool reg_console_appender = appender::register_appender<console_appender>( "console" );
+      static bool reg_json_console_appender = appender::register_appender<json_console_appender>( "json_console" );
       static bool reg_file_appender = appender::register_appender<file_appender>( "file" );
       get_logger_map().clear();
       get_appender_map().clear();
 
       //slog( "\n%s", fc::json::to_pretty_string(cfg).c_str() );
       for( size_t i = 0; i < cfg.appenders.size(); ++i ) {
-         appender::create( cfg.appenders[i].name, cfg.appenders[i].type, cfg.appenders[i].args );
+         appender::create( cfg.appenders[i].name, cfg.appenders[i].type, cfg.appenders[i].args );         
         // TODO... process enabled
       }
       for( size_t i = 0; i < cfg.loggers.size(); ++i ) {
@@ -39,16 +42,18 @@ namespace fc {
          if( cfg.loggers[i].parent.valid() ) {
             lgr.set_parent( logger::get( *cfg.loggers[i].parent ) );
          }
-         lgr.set_name(cfg.loggers[i].name);
-         if( cfg.loggers[i].level.valid() ) lgr.set_log_level( *cfg.loggers[i].level );
+
+         if( cfg.loggers[i].level.valid() ) {
+            lgr.set_log_level( *cfg.loggers[i].level );
+         }
          
 
-         for( auto a = cfg.loggers[i].appenders.begin(); a != cfg.loggers[i].appenders.end(); ++a ){
+         for( auto a = cfg.loggers[i].appenders.begin(); a != cfg.loggers[i].appenders.end(); ++a ){          
             auto ap = appender::get( *a );
             if( ap ) { lgr.add_appender(ap); }
          }
       }
-      return reg_console_appender || reg_file_appender;
+      return reg_console_appender || reg_file_appender || reg_json_console_appender;
       } catch ( exception& e )
       {
          fc::cerr<<e.to_detail_string()<<"\n";
@@ -73,6 +78,18 @@ namespace fc {
                  ) ); 
       cfg.appenders.push_back( 
              appender_config( "stdout", "console", 
+                 mutable_variant_object()
+                     ( "stream","std_out") 
+                     ( "level_colors", c ) 
+                 ) ); 
+      cfg.appenders.push_back( 
+             appender_config( "stderr", "json_console", 
+                 mutable_variant_object()
+                     ( "stream","std_error") 
+                     ( "level_colors", c ) 
+                 ) );
+      cfg.appenders.push_back( 
+             appender_config( "stdout", "json_console", 
                  mutable_variant_object()
                      ( "stream","std_out") 
                      ( "level_colors", c ) 

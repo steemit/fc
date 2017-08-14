@@ -51,7 +51,7 @@ namespace fc
             console_appender( const config& cfg );
             console_appender();
 
-            ~console_appender();
+            virtual ~console_appender();
             virtual void log( const log_message& m );
             
             void print( const std::string& text_to_print, 
@@ -59,9 +59,13 @@ namespace fc
 
             void configure( const config& cfg );
 
-       private:
+       // private:
+       protected:
             class impl;
             std::unique_ptr<impl> my;
+
+            fc::console_appender::color::type get_text_color( const log_message& m ) const;
+            bool can_flush() const;
    };
 } // namespace fc
 
