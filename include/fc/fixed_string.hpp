@@ -158,4 +158,16 @@ namespace fc {
    void from_variant( const variant& v, fixed_string<Storage>& s ) {
       s = v.as_string();
    }
+
+template< typename Storage >
+struct get_typename< fixed_string< Storage > >
+{
+   static const char* name()
+   {
+      static std::string n = std::string("fc::fixed_string<")
+         + std::to_string( sizeof(Storage) ) + std::string(">");
+      return n.c_str();
+   }
+};
+
 }

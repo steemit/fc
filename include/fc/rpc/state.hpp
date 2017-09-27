@@ -6,6 +6,7 @@
 namespace fc { namespace rpc {
    struct request
    {
+      std::string         jsonrpc = "2.0";
       optional<uint64_t>  id;
       std::string         method;
       variants            params;
@@ -55,6 +56,6 @@ namespace fc { namespace rpc {
    };
 } }  // namespace  fc::rpc
 
-FC_REFLECT( fc::rpc::request, (id)(method)(params) );
+FC_REFLECT( fc::rpc::request, (jsonrpc)(id)(method)(params) );
 FC_REFLECT( fc::rpc::error_object, (code)(message)(data) )
 FC_REFLECT( fc::rpc::response, (id)(result)(error) )

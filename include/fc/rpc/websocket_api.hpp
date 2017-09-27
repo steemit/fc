@@ -17,6 +17,10 @@ namespace fc { namespace rpc {
             api_id_type api_id,
             string method_name,
             variants args = variants() ) override;
+         virtual variant send_call(
+            string api_name,
+            string method_name,
+            variants args = variants() ) override;
          virtual variant send_callback(
             uint64_t callback_id,
             variants args = variants() ) override;

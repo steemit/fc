@@ -17,7 +17,7 @@
 #include <sstream>
 #include <iostream>
 
-namespace fc 
+namespace fc
 {
 
   class gelf_appender::impl : public retainable
@@ -27,7 +27,7 @@ namespace fc
     optional<ip::endpoint>     gelf_endpoint;
     udp_socket                 gelf_socket;
 
-    impl(const config& c) : 
+    impl(const config& c) :
       cfg(c)
     {
     }
@@ -52,7 +52,7 @@ namespace fc
       }
       if (!my->gelf_endpoint)
       {
-        // couldn't parse as a numeric ip address, try resolving as a DNS name.  
+        // couldn't parse as a numeric ip address, try resolving as a DNS name.
         // This can yield, so don't do it in the catch block above
         string::size_type colon_pos = my->cfg.endpoint.find(':');
         try
@@ -62,7 +62,7 @@ namespace fc
           string hostname = my->cfg.endpoint.substr( 0, colon_pos );
           std::vector<ip::endpoint> endpoints = resolve(hostname, port);
           if (endpoints.empty())
-              FC_THROW_EXCEPTION(unknown_host_exception, "The host name can not be resolved: ${hostname}", 
+              FC_THROW_EXCEPTION(unknown_host_exception, "The host name can not be resolved: ${hostname}",
                                  ("hostname", hostname));
           my->gelf_endpoint = endpoints.back();
         }
@@ -95,7 +95,7 @@ namespace fc
     gelf_message["version"] = "1.1";
     gelf_message["host"] = my->cfg.host;
     gelf_message["short_message"] = format_string(message.get_format(), message.get_data());
-    
+
     gelf_message["timestamp"] = context.get_timestamp().time_since_epoch().count() / 1000000.;
 
     switch (context.get_log_level())
@@ -124,16 +124,15 @@ namespace fc
     gelf_message["_line"] = context.get_line_number();
     gelf_message["_file"] = context.get_file();
     gelf_message["_method_name"] = context.get_method();
-    gelf_message["_thread_name"] = context.get_thread_name();
     if (!context.get_task_name().empty())
       gelf_message["_task_name"] = context.get_task_name();
 
     string gelf_message_as_string = json::to_string(gelf_message);
     //unsigned uncompressed_size = gelf_message_as_string.size();
     gelf_message_as_string = zlib_compress(gelf_message_as_string);
-    
+
     // graylog2 expects the zlib header to be 0x78 0x9c
-    // but miniz.c generates 0x78 0x01 (indicating 
+    // but miniz.c generates 0x78 0x01 (indicating
     // low compression instead of default compression)
     // so change that here
     assert(gelf_message_as_string[0] == (char)0x78);
@@ -155,16 +154,16 @@ namespace fc
       // no need to split
       std::shared_ptr<char> send_buffer(new char[gelf_message_as_string.size()],
                                         [](char* p){ delete[] p; });
-      memcpy(send_buffer.get(), gelf_message_as_string.c_str(), 
+      memcpy(send_buffer.get(), gelf_message_as_string.c_str(),
              gelf_message_as_string.size());
 
-      my->gelf_socket.send_to(send_buffer, gelf_message_as_string.size(), 
+      my->gelf_socket.send_to(send_buffer, gelf_message_as_string.size(),
                               *my->gelf_endpoint);
     }
     else
     {
       // split the message
-      // we need to generate an 8-byte ID for this message.  
+      // we need to generate an 8-byte ID for this message.
       // city hash should do
       uint64_t message_id = city_hash64(gelf_message_as_string.c_str(), gelf_message_as_string.size());
       const unsigned header_length = 2 /* magic */ + 8 /* msg id */ + 1 /* seq */ + 1 /* count */;
@@ -174,10 +173,10 @@ namespace fc
       unsigned number_of_packets_sent = 0;
       while (bytes_sent < gelf_message_as_string.size())
       {
-        unsigned bytes_to_send = std::min((unsigned)gelf_message_as_string.size() - bytes_sent, 
+        unsigned bytes_to_send = std::min((unsigned)gelf_message_as_string.size() - bytes_sent,
                                           body_length);
-                                               
-        std::shared_ptr<char> send_buffer(new char[max_payload_size], 
+
+        std::shared_ptr<char> send_buffer(new char[max_payload_size],
                                           [](char* p){ delete[] p; });
         char* ptr = send_buffer.get();
         // magic number for chunked message
@@ -190,9 +189,9 @@ namespace fc
 
         *(unsigned char*)(ptr++) = number_of_packets_sent;
         *(unsigned char*)(ptr++) = total_number_of_packets;
-        memcpy(ptr, gelf_message_as_string.c_str() + bytes_sent, 
+        memcpy(ptr, gelf_message_as_string.c_str() + bytes_sent,
                bytes_to_send);
-        my->gelf_socket.send_to(send_buffer, header_length + bytes_to_send, 
+        my->gelf_socket.send_to(send_buffer, header_length + bytes_to_send,
                                 *my->gelf_endpoint);
         ++number_of_packets_sent;
         bytes_sent += bytes_to_send;

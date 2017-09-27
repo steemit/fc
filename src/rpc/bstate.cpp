@@ -31,7 +31,7 @@ void  bstate::handle_reply( const bresponse& bresponse )
 {
    auto await = _awaiting.find( bresponse.id );
    FC_ASSERT( await != _awaiting.end(), "Unknown Response ID: ${id}", ("id",bresponse.id)("bresponse",bresponse) );
-   if( bresponse.result ) 
+   if( bresponse.result )
       await->second->set_value( *bresponse.result );
    else if( bresponse.error )
    {

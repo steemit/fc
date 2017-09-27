@@ -49,6 +49,11 @@ variant cli::send_call( api_id_type api_id, string method_name, variants args /*
    FC_ASSERT(false);
 }
 
+variant cli::send_call( string api_name, string method_name, variants args /* = variants() */ )
+{
+   FC_ASSERT(false);
+}
+
 variant cli::send_callback( uint64_t callback_id, variants args /* = variants() */ )
 {
    FC_ASSERT(false);
@@ -146,7 +151,7 @@ char* my_generator(const char* text, int state)
 
    auto& cmd = cli_commands();
 
-   while( list_index < cmd.size() ) 
+   while( list_index < cmd.size() )
    {
       name = cmd[list_index].c_str();
       list_index++;
@@ -181,7 +186,7 @@ void cli::getline( const fc::string& prompt, fc::string& line)
    // getting file descriptor for C++ streams is near impossible
    // so we just assume it's the same as the C stream...
 #ifdef HAVE_READLINE
-#ifndef WIN32   
+#ifndef WIN32
    if( isatty( fileno( stdin ) ) )
 #else
    // it's implied by

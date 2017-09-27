@@ -27,7 +27,7 @@ namespace fc {
 #endif
    };
 
-   console_appender::console_appender( const variant& args ) 
+   console_appender::console_appender( const variant& args )
    :my(new impl)
    {
       configure( args.as<config>() );
@@ -66,7 +66,7 @@ namespace fc {
    #ifdef WIN32
    static WORD
    #else
-   static const char* 
+   static const char*
    #endif
    get_console_color(console_appender::color::type t ) {
       switch( t ) {
@@ -100,7 +100,7 @@ namespace fc {
       ///////////////
       std::stringstream line;
       line << (m.get_context().get_timestamp().time_since_epoch().count() % (1000ll*1000ll*60ll*60))/1000 <<"ms ";
-      line << std::setw( 10 ) << std::left << m.get_context().get_thread_name().substr(0,9).c_str() <<" "<<std::setw(30)<< std::left <<file_line.str();
+      line << std::setw(30)<< std::left <<file_line.str();
 
       auto me = m.get_context().get_method();
       // strip all leading scopes...
@@ -140,7 +140,7 @@ namespace fc {
       #endif
 
       if( text.size() )
-         fprintf( out, "%s", text.c_str() ); //fmt_str.c_str() ); 
+         fprintf( out, "%s", text.c_str() ); //fmt_str.c_str() );
 
       #ifdef WIN32
       if (my->console_handle != INVALID_HANDLE_VALUE)

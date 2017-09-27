@@ -11,7 +11,7 @@ namespace fc { namespace rpc {
 
    namespace detail
    {
-      class json_connection_impl 
+      class json_connection_impl
       {
          public:
             json_connection_impl( fc::buffered_istream_ptr&& in, fc::buffered_ostream_ptr&& out )
@@ -39,7 +39,7 @@ namespace fc { namespace rpc {
                ilog( "send: {\"id\": ${i}, \"result\": ${r}}", ("i",id)("r",result) );
                {
                  fc::scoped_lock<fc::mutex> lock(_write_mutex);
-                 *_out << "{\"id\":";
+                 *_out << "{\"jsonrpc\":\"2.0\",\"id\":";
                  json::to_stream( *_out, id  );
                  *_out << ",\"result\":";
                  json::to_stream( *_out, result);
@@ -53,7 +53,7 @@ namespace fc { namespace rpc {
                      ("i",id)("what",e.what())("data", e) );
                {
                  fc::scoped_lock<fc::mutex> lock(_write_mutex);
-                 *_out << "{\"id\":";
+                 *_out << "{\"jsonrpc\":\"2.0\",\"id\":";
                  json::to_stream( *_out, id  );
                  *_out << ",\"error\":{\"message\":";
                  json::to_stream( *_out, fc::string(e.what()) );
@@ -69,7 +69,7 @@ namespace fc { namespace rpc {
             {
               wlog(  "recv: ${msg}", ("msg", obj) );
                fc::exception_ptr eptr;
-               try 
+               try
                {
                   auto m = obj.find("method");
                   auto i = obj.find("id");
@@ -107,10 +107,10 @@ namespace fc { namespace rpc {
                            }
                            else // invalid method / param combo
                            {
-                              FC_THROW_EXCEPTION( exception, "Invalid method or params  '${method}'", 
+                              FC_THROW_EXCEPTION( exception, "Invalid method or params  '${method}'",
                                                   ("method",m->value().as_string()));
                            }
-                        
+
                         }
                         else if( p->value().is_object() )
                         {
@@ -121,13 +121,13 @@ namespace fc { namespace rpc {
                            }
                            else // invalid method / param combo?
                            {
-                              FC_THROW_EXCEPTION( exception, "Invalid method or params  '${method}'", 
+                              FC_THROW_EXCEPTION( exception, "Invalid method or params  '${method}'",
                                                   ("method",m->value().as_string()));
                            }
                         }
                         else // invalid params
                         {
-                            FC_THROW_EXCEPTION( exception, "Invalid Params for method ${method}", 
+                            FC_THROW_EXCEPTION( exception, "Invalid Params for method ${method}",
                                                     ("method",m->value().as_string()));
                         }
                         if( i != obj.end() )
@@ -155,7 +155,7 @@ namespace fc { namespace rpc {
                         auto e = obj.find("error");
                         if( r != obj.end() ) //if regular result response
                         {
-                           await->second->set_value( r->value() ); 
+                           await->second->set_value( r->value() );
                         }
                         else if( e != obj.end() ) //if error response
                         {
@@ -167,11 +167,11 @@ namespace fc { namespace rpc {
                              if( data != err.end() )
                              {
                                 //wlog(  "exception: ${except}", ("except", data->value() ) );
-                                await->second->set_exception( data->value().as<exception>().dynamic_copy_exception() );  
+                                await->second->set_exception( data->value().as<exception>().dynamic_copy_exception() );
                              }
                              else
                                 await->second->set_exception( exception_ptr(new FC_EXCEPTION( exception, "${error}", ("error",e->value()) ) ) );
-                          } 
+                          }
                           catch ( fc::exception& e )
                           {
                             elog( "Error parsing exception: ${e}", ("e", e.to_detail_string() ) );
@@ -187,9 +187,9 @@ namespace fc { namespace rpc {
                   }
                   else // no method nor request id... invalid message
                   {
-                    
+
                   }
-               } 
+               }
                catch ( fc::exception& e ) // catch all other errors...
                {
                   fc_elog( _logger, "json rpc exception: ${exception}", ("exception",e ));
@@ -202,7 +202,7 @@ namespace fc { namespace rpc {
             void read_loop()
             {
                fc::exception_ptr eptr;
-               try 
+               try
                {
                   fc::string line;
                   while( !_done.canceled() )
@@ -211,11 +211,11 @@ namespace fc { namespace rpc {
                       ///ilog( "input: ${in}", ("in", v ) );
                       //wlog(  "recv: ${line}", ("line", line) );
                       _handle_message_future = fc::async([=](){ handle_message(v.get_object()); }, "json_connection handle_message");
-                  } 
-               } 
-               catch ( eof_exception& eof ) 
-               { 
-                  _eof = true; 
+                  }
+               }
+               catch ( eof_exception& eof )
+               {
+                  _eof = true;
                   eptr = eof.dynamic_copy_exception();
                }
                catch ( exception& e )
@@ -349,7 +349,7 @@ namespace fc { namespace rpc {
 
       {
          fc::scoped_lock<fc::mutex> lock(my->_write_mutex);
-         *my->_out << "{\"id\":";
+         *my->_out << "{\"jsonrpc\":\"2.0\",\"id\":";
          *my->_out << id;
          *my->_out << ",\"method\":";
          json::to_stream( *my->_out, method );
@@ -375,7 +375,7 @@ namespace fc { namespace rpc {
 
       {
          fc::scoped_lock<fc::mutex> lock(my->_write_mutex);
-         *my->_out << "{\"id\":";
+         *my->_out << "{\"jsonrpc\":\"2.0\",\"id\":";
          *my->_out << id;
          *my->_out << ",\"method\":";
          json::to_stream( *my->_out, method );
@@ -393,7 +393,7 @@ namespace fc { namespace rpc {
 
       {
          fc::scoped_lock<fc::mutex> lock(my->_write_mutex);
-         *my->_out << "{\"id\":";
+         *my->_out << "{\"jsonrpc\":\"2.0\",\"id\":";
          *my->_out << id;
          *my->_out << ",\"method\":";
          json::to_stream( *my->_out, method );
@@ -413,7 +413,7 @@ namespace fc { namespace rpc {
 
       {
          fc::scoped_lock<fc::mutex> lock(my->_write_mutex);
-         *my->_out << "{\"id\":";
+         *my->_out << "{\"jsonrpc\":\"2.0\",\"id\":";
          *my->_out << id;
          *my->_out << ",\"method\":";
          json::to_stream( *my->_out, method );
@@ -436,7 +436,7 @@ namespace fc { namespace rpc {
 
       {
          fc::scoped_lock<fc::mutex> lock(my->_write_mutex);
-         *my->_out << "{\"id\":";
+         *my->_out << "{\"jsonrpc\":\"2.0\",\"id\":";
          *my->_out << id;
          *my->_out << ",\"method\":";
          json::to_stream( *my->_out, method );
@@ -461,7 +461,7 @@ namespace fc { namespace rpc {
 
       {
          fc::scoped_lock<fc::mutex> lock(my->_write_mutex);
-         *my->_out << "{\"id\":";
+         *my->_out << "{\"jsonrpc\":\"2.0\",\"id\":";
          *my->_out << id;
          *my->_out << ",\"method\":";
          json::to_stream( *my->_out, method );
@@ -488,7 +488,7 @@ namespace fc { namespace rpc {
 
       {
          fc::scoped_lock<fc::mutex> lock(my->_write_mutex);
-         *my->_out << "{\"id\":";
+         *my->_out << "{\"jsonrpc\":\"2.0\",\"id\":";
          *my->_out << id;
          *my->_out << ",\"method\":";
          json::to_stream( *my->_out, method );
@@ -516,7 +516,7 @@ namespace fc { namespace rpc {
 
       {
          fc::scoped_lock<fc::mutex> lock(my->_write_mutex);
-         *my->_out << "{\"id\":";
+         *my->_out << "{\"jsonrpc\":\"2.0\",\"id\":";
          *my->_out << id;
          *my->_out << ",\"method\":";
          json::to_stream( *my->_out, method );
@@ -539,14 +539,14 @@ namespace fc { namespace rpc {
       }
       return my->_awaiting[id];
    }
-   future<variant> json_connection::async_call( const fc::string& method, 
-                                                const variant& a1, 
-                                                const variant& a2, 
-                                                const variant& a3, 
-                                                const variant& a4, 
-                                                const variant& a5, 
-                                                const variant& a6, 
-                                                const variant& a7, 
+   future<variant> json_connection::async_call( const fc::string& method,
+                                                const variant& a1,
+                                                const variant& a2,
+                                                const variant& a3,
+                                                const variant& a4,
+                                                const variant& a5,
+                                                const variant& a6,
+                                                const variant& a7,
                                                 const variant& a8 )
    {
       auto id = my->_next_id++;
@@ -554,7 +554,7 @@ namespace fc { namespace rpc {
 
       {
          fc::scoped_lock<fc::mutex> lock(my->_write_mutex);
-         *my->_out << "{\"id\":";
+         *my->_out << "{\"jsonrpc\":\"2.0\",\"id\":";
          *my->_out << id;
          *my->_out << ",\"method\":";
          json::to_stream( *my->_out, method );
@@ -579,15 +579,15 @@ namespace fc { namespace rpc {
       }
       return my->_awaiting[id];
    }
-   future<variant> json_connection::async_call( const fc::string& method, 
-                                                const variant& a1, 
-                                                const variant& a2, 
-                                                const variant& a3, 
-                                                const variant& a4, 
-                                                const variant& a5, 
-                                                const variant& a6, 
-                                                const variant& a7, 
-                                                const variant& a8, 
+   future<variant> json_connection::async_call( const fc::string& method,
+                                                const variant& a1,
+                                                const variant& a2,
+                                                const variant& a3,
+                                                const variant& a4,
+                                                const variant& a5,
+                                                const variant& a6,
+                                                const variant& a7,
+                                                const variant& a8,
                                                 const variant& a9 )
    {
       auto id = my->_next_id++;
@@ -595,7 +595,7 @@ namespace fc { namespace rpc {
 
       {
          fc::scoped_lock<fc::mutex> lock(my->_write_mutex);
-         *my->_out << "{\"id\":";
+         *my->_out << "{\"jsonrpc\":\"2.0\",\"id\":";
          *my->_out << id;
          *my->_out << ",\"method\":";
          json::to_stream( *my->_out, method );
@@ -622,16 +622,16 @@ namespace fc { namespace rpc {
       }
       return my->_awaiting[id];
    }
-   future<variant> json_connection::async_call( const fc::string& method, 
-                                                const variant& a1, 
-                                                const variant& a2, 
-                                                const variant& a3, 
-                                                const variant& a4, 
-                                                const variant& a5, 
-                                                const variant& a6, 
-                                                const variant& a7, 
-                                                const variant& a8, 
-                                                const variant& a9, 
+   future<variant> json_connection::async_call( const fc::string& method,
+                                                const variant& a1,
+                                                const variant& a2,
+                                                const variant& a3,
+                                                const variant& a4,
+                                                const variant& a5,
+                                                const variant& a6,
+                                                const variant& a7,
+                                                const variant& a8,
+                                                const variant& a9,
                                                 const variant& a10 )
    {
       auto id = my->_next_id++;
@@ -639,7 +639,7 @@ namespace fc { namespace rpc {
 
       {
          fc::scoped_lock<fc::mutex> lock(my->_write_mutex);
-         *my->_out << "{\"id\":";
+         *my->_out << "{\"jsonrpc\":\"2.0\",\"id\":";
          *my->_out << id;
          *my->_out << ",\"method\":";
          json::to_stream( *my->_out, method );
@@ -679,7 +679,7 @@ namespace fc { namespace rpc {
       my->_awaiting[id] = fc::promise<variant>::ptr( new fc::promise<variant>("json_connection::async_call") );
       fc::scoped_lock<fc::mutex> lock(my->_write_mutex);
       {
-         *my->_out << "{\"id\":";
+         *my->_out << "{\"jsonrpc\":\"2.0\",\"id\":";
          *my->_out << id;
          *my->_out << ",\"method\":";
          json::to_stream( *my->_out, method );
@@ -696,7 +696,7 @@ namespace fc { namespace rpc {
       my->_awaiting[id] = fc::promise<variant>::ptr( new fc::promise<variant>("json_connection::async_call") );
       fc::scoped_lock<fc::mutex> lock(my->_write_mutex);
       {
-        *my->_out << "{\"id\":";
+        *my->_out << "{\"jsonrpc\":\"2.0\",\"id\":";
         *my->_out << id;
         *my->_out << ",\"method\":";
          json::to_stream( *my->_out, method );

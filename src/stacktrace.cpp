@@ -7,7 +7,7 @@
 #include <fc/filesystem.hpp>
 #include <fc/stacktrace.hpp>
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined( __APPLE__ )
 
 #include <cxxabi.h>
 #include <execinfo.h>

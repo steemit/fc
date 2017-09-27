@@ -3,12 +3,12 @@
 #include <fc/log/logger.hpp>
 #include <vector>
 
-namespace fc 
+namespace fc
 {
-   class console_appender : public appender 
+   class console_appender : public appender
    {
        public:
-            struct color 
+            struct color
             {
                 enum type {
                    red,
@@ -24,9 +24,9 @@ namespace fc
 
             struct stream { enum type { std_out, std_error }; };
 
-            struct level_color 
+            struct level_color
             {
-               level_color( log_level l=log_level::all, 
+               level_color( log_level l=log_level::all,
                             color::type c=color::console_default )
                :level(l),color(c){}
 
@@ -34,10 +34,10 @@ namespace fc
                console_appender::color::type     color;
             };
 
-            struct config 
+            struct config
             {
                config()
-               :format( "${timestamp} ${thread_name} ${context} ${file}:${line} ${method} ${level}]  ${message}" ),
+               :format( "${timestamp} ${context} ${file}:${line} ${method} ${level}]  ${message}" ),
                 stream(console_appender::stream::std_error),flush(true){}
 
                fc::string                         format;
@@ -53,8 +53,8 @@ namespace fc
 
             ~console_appender();
             virtual void log( const log_message& m );
-            
-            void print( const std::string& text_to_print, 
+
+            void print( const std::string& text_to_print,
                         color::type text_color = color::console_default );
 
             void configure( const config& cfg );

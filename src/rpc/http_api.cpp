@@ -64,6 +64,15 @@ variant http_api_connection::send_call(
    return variant();
 }
 
+variant http_api_connection::send_call(
+   string api_name,
+   string method_name,
+   variants args /* = variants() */ )
+{
+   // HTTP has no way to do this, so do nothing
+   return variant();
+}
+
 variant http_api_connection::send_callback(
    uint64_t callback_id,
    variants args /* = variants() */ )

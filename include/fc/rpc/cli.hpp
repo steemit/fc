@@ -19,6 +19,7 @@ namespace fc { namespace rpc {
          ~cli();
 
          virtual variant send_call( api_id_type api_id, string method_name, variants args = variants() );
+         virtual variant send_call( string api_name, string method_name, variants args = variants() );
          virtual variant send_callback( uint64_t callback_id, variants args = variants() );
          virtual void    send_notice( uint64_t callback_id, variants args = variants() );
 
@@ -38,4 +39,4 @@ namespace fc { namespace rpc {
          std::map<string,std::function<string(variant,const variants&)> > _result_formatters;
          fc::future<void> _run_complete;
    };
-} } 
+} }

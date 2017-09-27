@@ -4,7 +4,7 @@
 #include <fc/shared_ptr.hpp>
 #include <fc/log/log_message.hpp>
 
-namespace fc  
+namespace fc
 {
 
    class appender;
@@ -13,13 +13,13 @@ namespace fc
     *
     *
     @code
-      void my_class::func() 
+      void my_class::func()
       {
          fc_dlog( my_class_logger, "Format four: ${arg}  five: ${five}", ("arg",4)("five",5) );
       }
     @endcode
     */
-   class logger 
+   class logger
    {
       public:
          static logger get( const fc::string& name = "default");
@@ -148,19 +148,21 @@ namespace fc
   BOOST_PP_LPAREN() BOOST_PP_STRINGIZE(base),fc::variant(base) BOOST_PP_RPAREN()
 
 #define FC_FORMAT( SEQ )\
-    BOOST_PP_SEQ_FOR_EACH( FC_FORMAT_ARG, v, SEQ ) 
+    BOOST_PP_SEQ_FOR_EACH( FC_FORMAT_ARG, v, SEQ )
 
-// takes a ... instead of a SEQ arg because it can be called with an empty SEQ 
+// takes a ... instead of a SEQ arg because it can be called with an empty SEQ
 // from FC_CAPTURE_AND_THROW()
 #define FC_FORMAT_ARG_PARAMS( ... )\
-    BOOST_PP_SEQ_FOR_EACH( FC_FORMAT_ARGS, v, __VA_ARGS__ ) 
+    BOOST_PP_SEQ_FOR_EACH( FC_FORMAT_ARGS, v, __VA_ARGS__ )
 
+#define ddump( SEQ ) \
+    dlog( FC_FORMAT(SEQ), FC_FORMAT_ARG_PARAMS(SEQ) )
 #define idump( SEQ ) \
-    ilog( FC_FORMAT(SEQ), FC_FORMAT_ARG_PARAMS(SEQ) )  
+    ilog( FC_FORMAT(SEQ), FC_FORMAT_ARG_PARAMS(SEQ) )
 #define wdump( SEQ ) \
-    wlog( FC_FORMAT(SEQ), FC_FORMAT_ARG_PARAMS(SEQ) )  
+    wlog( FC_FORMAT(SEQ), FC_FORMAT_ARG_PARAMS(SEQ) )
 #define edump( SEQ ) \
-    elog( FC_FORMAT(SEQ), FC_FORMAT_ARG_PARAMS(SEQ) )  
+    elog( FC_FORMAT(SEQ), FC_FORMAT_ARG_PARAMS(SEQ) )
 
 // this disables all normal logging statements -- not something you'd normally want to do,
 // but it's useful if you're benchmarking something and suspect logging is causing

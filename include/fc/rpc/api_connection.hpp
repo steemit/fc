@@ -23,7 +23,7 @@ namespace fc {
             callback_functor( std::weak_ptr< fc::api_connection > con, uint64_t id )
             :_callback_id(id),_api_connection(con){}
 
-            template<typename... Args> 
+            template<typename... Args>
             result_type operator()( Args... args )const;
 
          private:
@@ -52,16 +52,16 @@ namespace fc {
       template<typename R, typename ... Args>
       std::function<variant(const fc::variants&)> to_generic( const std::function<R(Args...)>& f )
       {
-         return [=]( const variants& args ) { 
-            return variant( call_generic( f, args.begin(), args.end() ) ); 
+         return [=]( const variants& args ) {
+            return variant( call_generic( f, args.begin(), args.end() ) );
          };
       }
 
       template<typename ... Args>
       std::function<variant(const fc::variants&)> to_generic( const std::function<void(Args...)>& f )
       {
-         return [=]( const variants& args ) { 
-            call_generic( f, args.begin(), args.end() ); 
+         return [=]( const variants& args ) {
+            call_generic( f, args.begin(), args.end() );
             return variant();
          };
       }
@@ -212,15 +212,19 @@ namespace fc {
 
 
          template<typename T>
-         api<T> get_remote_api( api_id_type api_id = 0 )
+         api<T> get_remote_api( api_id_type api_id = 0, string api_name = "" )
          {
             api<T> result;
-            result->visit( api_visitor(  api_id, this->shared_from_this() ) );
+            if( api_name.size() )
+               result->visit( api_visitor( api_id, api_name, this->shared_from_this() ) );
+            else
+               result->visit( api_visitor( api_id, this->shared_from_this() ) );
             return result;
          }
-  
+
          /** makes calls to the remote server */
          virtual variant send_call( api_id_type api_id, string method_name, variants args = variants() ) = 0;
+         virtual variant send_call( string api_name, string method_name, variants args = variants() ) = 0;
          virtual variant send_callback( uint64_t callback_id, variants args = variants() ) = 0;
          virtual void    send_notice( uint64_t callback_id, variants args = variants() ) = 0;
 
@@ -271,12 +275,16 @@ namespace fc {
          struct api_visitor
          {
             uint32_t                            _api_id;
+            optional< string >                  _api_name;
             std::shared_ptr<fc::api_connection> _connection;
 
             api_visitor( uint32_t api_id, std::shared_ptr<fc::api_connection> con )
             :_api_id(api_id),_connection(std::move(con))
             {
             }
+
+            api_visitor( uint32_t api_id, string& api_name, std::shared_ptr<fc::api_connection> con )
+            : _api_id(api_id), _api_name(api_name), _connection(std::move(con)) {}
 
             api_visitor() = delete;
 
@@ -287,9 +295,9 @@ namespace fc {
             }
 
             template<typename ResultInterface>
-            static fc::api<ResultInterface> from_variant( const variant& v, 
+            static fc::api<ResultInterface> from_variant( const variant& v,
                                                           fc::api<ResultInterface>* /*used for template deduction*/,
-                                                          const std::shared_ptr<fc::api_connection>&  con 
+                                                          const std::shared_ptr<fc::api_connection>&  con
                                                         )
             {
                return con->get_remote_api<ResultInterface>( v.as_uint64() );
@@ -307,34 +315,43 @@ namespace fc {
             }
 
             template<typename T>
-            static fc::variant convert_callbacks( const std::shared_ptr<fc::api_connection>&, const T& v ) 
-            { 
-               return fc::variant(v); 
+            static fc::variant convert_callbacks( const std::shared_ptr<fc::api_connection>&, const T& v )
+            {
+               return fc::variant(v);
             }
 
             template<typename Signature>
-            static fc::variant convert_callbacks( const std::shared_ptr<fc::api_connection>& con, const std::function<Signature>& v ) 
-            { 
-               return con->register_callback( v ); 
+            static fc::variant convert_callbacks( const std::shared_ptr<fc::api_connection>& con, const std::function<Signature>& v )
+            {
+               return con->register_callback( v );
             }
 
             template<typename Result, typename... Args>
-            void operator()( const char* name, std::function<Result(Args...)>& memb )const 
+            void operator()( const char* name, std::function<Result(Args...)>& memb )const
             {
                 auto con   = _connection;
                 auto api_id = _api_id;
-                memb = [con,api_id,name]( Args... args ) {
-                    auto var_result = con->send_call( api_id, name, { convert_callbacks(con,args)...} );
+                auto api_name = _api_name;
+                memb = [con,api_id,name,api_name]( Args... args ) {
+                    variant var_result;
+                    if( api_name )
+                      var_result = con->send_call( *api_name, name, { convert_callbacks(con,args)...} );
+                    else
+                      var_result = con->send_call( api_id, name, { convert_callbacks(con,args)...} );
                     return from_variant( var_result, (Result*)nullptr, con );
                 };
             }
             template<typename... Args>
-            void operator()( const char* name, std::function<void(Args...)>& memb )const 
+            void operator()( const char* name, std::function<void(Args...)>& memb )const
             {
                 auto con   = _connection;
                 auto api_id = _api_id;
-                memb = [con,api_id,name]( Args... args ) {
-                   con->send_call( api_id, name, { convert_callbacks(con,args)...} );
+                auto api_name = _api_name;
+                memb = [con,api_id,name,api_name]( Args... args ) {
+                   if( api_name )
+                      con->send_call( *api_name, name, { convert_callbacks(con,args)...} );
+                    else
+                      con->send_call( api_id, name, { convert_callbacks(con,args)...} );
                 };
             }
          };
@@ -348,6 +365,11 @@ namespace fc {
          {
             FC_ASSERT( _remote_connection );
             return _remote_connection->receive_call( api_id, method_name, std::move(args) );
+         }
+         virtual variant send_call( string api_name, string method_name, variants args = variants() ) override
+         {
+            FC_ASSERT( false, "local call by name not supported" );
+            return variant();
          }
          virtual variant send_callback( uint64_t callback_id, variants args = variants() ) override
          {
@@ -380,30 +402,30 @@ namespace fc {
    }
 
    template<typename Interface, typename Adaptor, typename ... Args>
-   std::function<variant(const fc::variants&)> generic_api::api_visitor::to_generic( 
+   std::function<variant(const fc::variants&)> generic_api::api_visitor::to_generic(
                                                const std::function<fc::api<Interface,Adaptor>(Args...)>& f )const
    {
       auto api_con = _api_con;
       auto gapi = &_api;
-      return [=]( const variants& args ) { 
+      return [=]( const variants& args ) {
          auto con = api_con.lock();
          FC_ASSERT( con, "not connected" );
 
-         auto api_result = gapi->call_generic( f, args.begin(), args.end() ); 
+         auto api_result = gapi->call_generic( f, args.begin(), args.end() );
          return con->register_api( api_result );
       };
    }
    template<typename Interface, typename Adaptor, typename ... Args>
-   std::function<variant(const fc::variants&)> generic_api::api_visitor::to_generic( 
+   std::function<variant(const fc::variants&)> generic_api::api_visitor::to_generic(
                                                const std::function<fc::optional<fc::api<Interface,Adaptor>>(Args...)>& f )const
    {
       auto api_con = _api_con;
       auto gapi = &_api;
-      return [=]( const variants& args )-> fc::variant { 
+      return [=]( const variants& args )-> fc::variant {
          auto con = api_con.lock();
          FC_ASSERT( con, "not connected" );
 
-         auto api_result = gapi->call_generic( f, args.begin(), args.end() ); 
+         auto api_result = gapi->call_generic( f, args.begin(), args.end() );
          if( api_result )
             return con->register_api( *api_result );
          return variant();
@@ -431,8 +453,8 @@ namespace fc {
    std::function<variant(const fc::variants&)> generic_api::api_visitor::to_generic( const std::function<R(Args...)>& f )const
    {
       generic_api* gapi = &_api;
-      return [f,gapi]( const variants& args ) { 
-         return variant( gapi->call_generic( f, args.begin(), args.end() ) ); 
+      return [f,gapi]( const variants& args ) {
+         return variant( gapi->call_generic( f, args.begin(), args.end() ) );
       };
    }
 
@@ -440,8 +462,8 @@ namespace fc {
    std::function<variant(const fc::variants&)> generic_api::api_visitor::to_generic( const std::function<void(Args...)>& f )const
    {
       generic_api* gapi = &_api;
-      return [f,gapi]( const variants& args ) { 
-         gapi->call_generic( f, args.begin(), args.end() ); 
+      return [f,gapi]( const variants& args ) {
+         gapi->call_generic( f, args.begin(), args.end() );
          return variant();
       };
    }
@@ -482,7 +504,7 @@ namespace fc {
 
    namespace detail {
       template<typename Signature>
-      template<typename... Args> 
+      template<typename... Args>
       typename callback_functor<Signature>::result_type callback_functor<Signature>::operator()( Args... args )const
       {
          std::shared_ptr< fc::api_connection > locked = _api_connection.lock();

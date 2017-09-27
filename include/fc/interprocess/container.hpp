@@ -2,14 +2,17 @@
 
 #include <fc/variant.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
-#include <boost/interprocess/containers/string.hpp>
-#include <boost/interprocess/containers/vector.hpp>
-#include <boost/interprocess/containers/map.hpp>
-#include <boost/interprocess/containers/flat_map.hpp>
-#include <boost/interprocess/containers/set.hpp>
 #include <boost/interprocess/containers/deque.hpp>
+#include <boost/interprocess/containers/flat_map.hpp>
+#include <boost/interprocess/containers/map.hpp>
+#include <boost/interprocess/containers/set.hpp>
+#include <boost/interprocess/containers/vector.hpp>
 #include <fc/crypto/hex.hpp>
 #include <fc/io/raw_fwd.hpp>
+
+// boost::interprocess::flat_map is an alias to boost::container::flat_map
+// so it uses the reflection/serialization for flat_map and does not have any here
+// BUT we add typename for flat_map so it works with allocators
 
 namespace fc {
 
@@ -140,4 +143,57 @@ namespace fc {
              fc::raw::unpack( s, item );
        }
    }
+
+template< typename E, typename Allocator >
+struct get_typename< bip::deque< E, Allocator > >
+{
+   static const char* name()
+   {
+      static std::string n = std::string("bip::deque<") + get_typename<E>::name() + ">";
+      return n.c_str();
+   }
+};
+
+template< typename K, typename V, typename Comp, typename Allocator >
+struct get_typename< bip::flat_map< K, V, Comp, Allocator > >
+{
+   static const char* name()
+   {
+      static std::string n = std::string("bip::flat_map<")
+         + get_typename<K>::name() + std::string(",")
+         + get_typename<V>::name() + std::string(">");
+      return n.c_str();
+   }
+};
+
+template< typename E, typename Allocator >
+struct get_typename< bip::map< E, Allocator > >
+{
+   static const char* name()
+   {
+      static std::string n = std::string("bip::map<") + get_typename<E>::name() + ">";
+      return n.c_str();
+   }
+};
+
+template< typename E, typename Allocator >
+struct get_typename< bip::set< E, Allocator > >
+{
+   static const char* name()
+   {
+      static std::string n = std::string("bip::set<") + get_typename<E>::name() + ">";
+      return n.c_str();
+   }
+};
+
+template< typename E, typename Allocator >
+struct get_typename< bip::vector< E, Allocator > >
+{
+   static const char* name()
+   {
+      static std::string n = std::string("bip::vector<") + get_typename<E>::name() + ">";
+      return n.c_str();
+   }
+};
+
 }

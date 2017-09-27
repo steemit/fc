@@ -131,7 +131,7 @@ namespace fc {
    };
 
    file_appender::config::config(const fc::path& p) :
-     format( "${timestamp} ${thread_name} ${context} ${file}:${line} ${method} ${level}]  ${message}" ),
+     format( "${timestamp} ${context} ${file}:${line} ${method} ${level}]  ${message}" ),
      filename(p),
      flush(true),
      rotate(false)
@@ -162,7 +162,7 @@ namespace fc {
       std::stringstream line;
       //line << (m.get_context().get_timestamp().time_since_epoch().count() % (1000ll*1000ll*60ll*60))/1000 <<"ms ";
       line << string(m.get_context().get_timestamp()) << " ";
-      line << std::setw( 21 ) << (m.get_context().get_thread_name().substr(0,9) + string(":") + m.get_context().get_task_name()).c_str() << " ";
+      line << std::setw( 21 ) << (m.get_context().get_task_name()).c_str() << " ";
 
       string method_name = m.get_context().get_method();
       // strip all leading scopes...

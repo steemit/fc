@@ -24,6 +24,8 @@ websocket_api_connection::websocket_api_connection( fc::http::websocket_connecti
       else
          api_id = args[0].as_uint64();
 
+      idump( (args) );
+
       return this->receive_call(
          api_id,
          args[1].as_string(),
@@ -59,7 +61,19 @@ variant websocket_api_connection::send_call(
    string method_name,
    variants args /* = variants() */ )
 {
+   idump( (api_id)(method_name)(args) );
    auto request = _rpc_state.start_remote_call(  "call", {api_id, std::move(method_name), std::move(args) } );
+   idump( (request) );
+   _connection.send_message( fc::json::to_string(request) );
+   return _rpc_state.wait_for_response( *request.id );
+}
+
+variant websocket_api_connection::send_call(
+   string api_name,
+   string method_name,
+   variants args )
+{
+   auto request = _rpc_state.start_remote_call(  "call", {std::move(api_name), std::move(method_name), std::move(args) } );
    _connection.send_message( fc::json::to_string(request) );
    return _rpc_state.wait_for_response( *request.id );
 }
@@ -77,7 +91,7 @@ void websocket_api_connection::send_notice(
    uint64_t callback_id,
    variants args /* = variants() */ )
 {
-   fc::rpc::request req{ optional<uint64_t>(), "notice", {callback_id, std::move(args)}};
+   fc::rpc::request req{ "2.0", optional<uint64_t>(), "notice", {callback_id, std::move(args)}};
    _connection.send_message( fc::json::to_string(req) );
 }
 
