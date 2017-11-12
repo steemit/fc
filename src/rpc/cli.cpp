@@ -165,6 +165,10 @@ char* my_generator(const char* text, int state)
 }
 
 
+#ifdef __GNUC__
+static char** cli_completion( const char * text , int start, int end) __attribute__ ((unused));
+#endif
+
 static char** cli_completion( const char * text , int start, int end)
 {
    char **matches;
