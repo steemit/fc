@@ -1,7 +1,7 @@
 #pragma once
 #include <fc/thread/thread.hpp>
-#include <boost/context/all.hpp>
 #include <fc/exception/exception.hpp>
+#include <boost/context/continuation_fcontext.hpp>
 #include <vector>
 
 #include <boost/version.hpp>
