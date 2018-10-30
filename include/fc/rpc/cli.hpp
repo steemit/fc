@@ -32,6 +32,8 @@ namespace fc { namespace rpc {
 
          void set_prompt( const string& prompt );
 
+         void set_regex_secret( const string& expr );
+
       private:
          void run();
 
