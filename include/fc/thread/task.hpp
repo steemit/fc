@@ -25,6 +25,7 @@ namespace fc {
       };
       void* get_task_specific_data(unsigned slot);
       void set_task_specific_data(unsigned slot, void* new_value, void(*cleanup)(void*));
+      class idle_guard;
    }
 
   class task_base : virtual public promise_base {
@@ -53,6 +54,7 @@ namespace fc {
       // thread/thread_private
       friend class thread;
       friend class thread_d;
+      friend class detail::idle_guard;
       fwd<spin_lock,8> _spinlock;
 
       // avoid rtti info for every possible functor...

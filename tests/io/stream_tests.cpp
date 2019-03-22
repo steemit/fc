@@ -112,11 +112,11 @@ BOOST_AUTO_TEST_CASE(fstream_test)
    BOOST_CHECK_THROW( in2.readsome( buf, 3, 0 ), fc::eof_exception );
 
    {
-      out.flush();
+      out.close();
       std::fstream test( outf.path().to_native_ansi_path(), std::fstream::in );
-      BOOST_CHECK_EQUAL( 11u, test.readsome( (&(*buf)), 11 ) );
+      test.read( (&(*buf)), 11 );
       BOOST_CHECK_EQUAL( "Hello world", std::string( (&(*buf)), 11 ) );
-      BOOST_CHECK_EQUAL( 0u, test.readsome( (&(*buf)), 11 ) );
+      BOOST_CHECK(!test.read( (&(*buf)), 11 ));
       test.close();
    }
 
@@ -166,11 +166,11 @@ BOOST_AUTO_TEST_CASE(buffered_fstream_test)
    BOOST_CHECK_THROW( bin2.readsome( buf, 3, 0 ), fc::eof_exception );
 
    {
-      bout.flush();
+      bout.close();
       std::fstream test( outf.path().to_native_ansi_path(), std::fstream::in );
-      BOOST_CHECK_EQUAL( 11u, test.readsome( (&(*buf)), 11 ) );
+      test.read( (&(*buf)), 11 );
       BOOST_CHECK_EQUAL( "Hello world", std::string( (&(*buf)), 11 ) );
-      BOOST_CHECK_EQUAL( 0u, test.readsome( (&(*buf)), 11 ) );
+      BOOST_CHECK(!test.read( (&(*buf)), 11 ));
       test.close();
    }
 }

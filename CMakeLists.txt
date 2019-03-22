@@ -34,7 +34,7 @@ endif()
 SET (ORIGINAL_LIB_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
 
 SET(BOOST_COMPONENTS)
-LIST(APPEND BOOST_COMPONENTS thread date_time system filesystem program_options signals serialization chrono unit_test_framework context locale iostreams regex)
+LIST(APPEND BOOST_COMPONENTS thread date_time filesystem system program_options chrono unit_test_framework context iostreams regex)
 SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
 
 IF( ECC_IMPL STREQUAL openssl )
@@ -210,6 +210,7 @@ set( fc_sources
      src/variant.cpp
      src/exception.cpp
      src/variant_object.cpp
+     src/static_variant.cpp
      src/thread/thread.cpp
      src/thread/thread_specific.cpp
      src/thread/future.cpp
@@ -217,6 +218,7 @@ set( fc_sources
      src/thread/spin_lock.cpp
      src/thread/spin_yield_lock.cpp
      src/thread/mutex.cpp
+     src/thread/parallel.cpp
      src/thread/non_preemptable_scope_check.cpp
      src/asio.cpp
      src/string.cpp

@@ -5,7 +5,6 @@
 #include <fc/io/varint.hpp>
 #include <fc/optional.hpp>
 #include <fc/fwd.hpp>
-#include <fc/smart_ref_fwd.hpp>
 #include <fc/array.hpp>
 #include <fc/time.hpp>
 #include <fc/filesystem.hpp>
@@ -219,19 +218,6 @@ namespace fc {
        FC_ASSERT( _max_depth > 0 );
        fc::raw::unpack( *v, _max_depth - 1 ); // TODO not sure about this
     }
-    template<typename Stream, typename T>
-    void pack( Stream& s, const fc::smart_ref<T>& v, uint32_t _max_depth )
-    {
-       FC_ASSERT( _max_depth > 0 );
-       fc::raw::pack( s, *v, _max_depth - 1 );
-    }
-
-    template<typename Stream, typename T>
-    void unpack( Stream& s, fc::smart_ref<T>& v, uint32_t _max_depth )
-    {
-       FC_ASSERT( _max_depth > 0 );
-       fc::raw::unpack( s, *v, _max_depth - 1 );
-    }
 
     // optional
     template<typename Stream, typename T>
@@ -428,8 +414,7 @@ namespace fc {
        --_max_depth;
        unsigned_int size; fc::raw::unpack( s, size, _max_depth );
        value.clear();
-       FC_ASSERT( size.value*sizeof(T) < MAX_ARRAY_ALLOC_SIZE );
-       value.reserve(size.value);
+       value.reserve( std::min( size.value, static_cast<uint64_t>(FC_MAX_PREALLOC_SIZE) ) );
        for( uint32_t i = 0; i < size.value; ++i )
        {
           T tmp;
@@ -474,8 +459,7 @@ namespace fc {
        --_max_depth;
        unsigned_int size; fc::raw::unpack( s, size, _max_depth );
        value.clear();
-       FC_ASSERT( size.value*(sizeof(K)+sizeof(V)) < MAX_ARRAY_ALLOC_SIZE );
-       value.reserve(size.value);
+       value.reserve( std::min( size.value, static_cast<uint64_t>(FC_MAX_PREALLOC_SIZE) ) );
        for( uint32_t i = 0; i < size.value; ++i )
        {
           std::pair<K,V> tmp;
@@ -502,7 +486,6 @@ namespace fc {
        --_max_depth;
        unsigned_int size; fc::raw::unpack( s, size, _max_depth );
        value.clear();
-       FC_ASSERT( size.value*(sizeof(K)+sizeof(V)) < MAX_ARRAY_ALLOC_SIZE );
        for( uint32_t i = 0; i < size.value; ++i )
        {
           std::pair<K,V> tmp;
@@ -529,13 +512,12 @@ namespace fc {
        FC_ASSERT( _max_depth > 0 );
        --_max_depth;
        unsigned_int size; fc::raw::unpack( s, size, _max_depth );
-       FC_ASSERT( size.value*sizeof(T) < MAX_ARRAY_ALLOC_SIZE );
-       value.resize(size.value);
-       auto itr = value.begin();
-       auto end = value.end();
-       while( itr != end ) {
-          fc::raw::unpack( s, *itr, _max_depth );
-          ++itr;
+       value.resize( std::min( size.value, static_cast<uint64_t>(FC_MAX_PREALLOC_SIZE) ) );
+       for( uint64_t i = 0; i < size; i++ )
+       {
+          if( i >= value.size() )
+             value.resize( std::min( static_cast<uint64_t>(2*value.size()), size.value ) );
+          unpack( s, value[i], _max_depth );
        }
     }
 
@@ -557,13 +539,12 @@ namespace fc {
        FC_ASSERT( _max_depth > 0 );
        --_max_depth;
        unsigned_int size; fc::raw::unpack( s, size, _max_depth );
-       FC_ASSERT( size.value*sizeof(T) < MAX_ARRAY_ALLOC_SIZE );
-       value.resize(size.value);
-       auto itr = value.begin();
-       auto end = value.end();
-       while( itr != end ) {
-          fc::raw::unpack( s, *itr, _max_depth );
-          ++itr;
+       value.resize( std::min( size.value, static_cast<uint64_t>(FC_MAX_PREALLOC_SIZE) ) );
+       for( uint64_t i = 0; i < size; i++ )
+       {
+          if( i >= value.size() )
+             value.resize( std::min( static_cast<uint64_t>(2*value.size()), size.value ) );
+          unpack( s, value[i], _max_depth );
        }
     }
 

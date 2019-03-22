@@ -2,6 +2,8 @@
 #include <fc/fwd.hpp>
 #include <fc/string.hpp>
 
+#include <functional>
+
 namespace fc{
 
 class sha1 
@@ -82,3 +84,6 @@ namespace std
        }
     };
 }
+
+#include <fc/reflect/reflect.hpp>
+FC_REFLECT_TYPENAME( fc::sha1 )

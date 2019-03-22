@@ -21,7 +21,6 @@
 #endif
 
 namespace fc {
-  class abstract_thread;
   struct void_t{};
   class priority;
   class thread;
@@ -146,7 +145,9 @@ namespace fc {
     public:
       typedef fc::shared_ptr< promise<void> > ptr;
       promise( const char* desc FC_TASK_NAME_DEFAULT_ARG):promise_base(desc){}
-      //promise( const void_t& ){ set_value(); }
+      promise( bool fulfilled, const char* desc FC_TASK_NAME_DEFAULT_ARG ){
+          if( fulfilled ) set_value();
+      }
     
       void wait(const microseconds& timeout = microseconds::maximum() ){
         this->_wait( timeout );

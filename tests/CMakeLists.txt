@@ -53,6 +53,7 @@ add_executable( all_tests all_tests.cpp
                           network/http/websocket_test.cpp
                           thread/task_cancel.cpp
                           thread/thread_tests.cpp
+                          thread/parallel_tests.cpp
                           bloom_test.cpp
                           real128_test.cpp
                           serialization_test.cpp

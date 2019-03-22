@@ -65,11 +65,17 @@ namespace fc {
      const boost::filesystem::path& bfp = file; 
       my->ifs.open( bfp, std::ios::binary );
    }
+
    size_t ifstream::readsome( char* buf, size_t len ) {
       auto s = size_t(my->ifs.readsome( buf, len ));
-      if( s <= 0 ) {
+      if( s <= 0 ) 
+      {
          read( buf, 1 );
          s = 1;
+         if (len > 1)
+         {
+            s += size_t(my->ifs.readsome( &buf[1], len - 1));
+         }
       }
       return s;
    }

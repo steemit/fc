@@ -19,7 +19,6 @@ namespace asio {
      *  @brief internal implementation types/methods for fc::asio
      */
     namespace detail {
-        using namespace fc;
 
         class read_write_handler
         {
@@ -59,14 +58,14 @@ namespace asio {
           bool operator()( C& c, bool s ) { c.non_blocking(s); return true; } 
         };
 
-        #if WIN32  // windows stream handles do not support non blocking!
+#if WIN32  // windows stream handles do not support non blocking!
 	       template<>
          struct non_blocking<boost::asio::windows::stream_handle> { 
 	          typedef boost::asio::windows::stream_handle C;
             bool operator()( C& ) { return false; } 
             bool operator()( C&, bool ) { return false; } 
         };
-        #endif 
+#endif
     } // end of namespace detail
 
     /***
@@ -78,7 +77,8 @@ namespace asio {
        public:
           default_io_service_scope();
           ~default_io_service_scope();
-          static void set_num_threads(uint16_t num_threads);
+          static void     set_num_threads(uint16_t num_threads);
+          static uint16_t get_num_threads();
           boost::asio::io_service*          io;
        private:
           std::vector<boost::thread*>       asio_threads;

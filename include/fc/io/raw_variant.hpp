@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <fc/exception/exception.hpp>
 #include <fc/io/raw_fwd.hpp>
 #include <fc/variant_object.hpp>
@@ -143,9 +144,8 @@ namespace fc { namespace raw {
        --_max_depth;
        unsigned_int vs;
        unpack( s, vs, _max_depth );
-
        mutable_variant_object mvo;
-       mvo.reserve(vs.value);
+       mvo.reserve( std::min( vs.value, static_cast<uint64_t>(FC_MAX_PREALLOC_SIZE) ) );
        for( uint32_t i = 0; i < vs.value; ++i )
        {
           fc::string key;
